@@ -92,3 +92,103 @@ class QuadTree{
         return found;
     }
 }
+//less continye
+class Body{
+    constructor(x,y,mass,isStar=false){
+        this.id =Math.random().toString(16).slice(2);
+        this.pos =new Vec2(x,y);
+        this.vel = new Vec2(0,0);
+        this.acc =new Vec2(0,0);
+        this.mass = mass;
+        this.isStar =isStar;
+        this.dead=false;
+        this.radius =Math.max(3,Math.sqrt(this.mass)*1.2);
+        this.hue =this._calcHue();
+        this.trail = [];
+        this.trailTick = 0;
+    }
+    _calcHue(){
+        if(this.isStar)return;
+        return Math.floor((this.mass%1000)/1000*360);
+    }
+    updatePos(dt){
+        if(this.isStar)return;
+        let dtSq =dt*dt;
+        let posDelta=new Vec2(this.vel.x*dt+0.5*this.acc.x*dtSq,this.vel.y*dt+0.5*this.acc.y*dtSq);
+        this.pos.add(posDelta);
+        this.trailTick++;
+        if(this.trailTick>5){
+            this.trail.push(this.pos.clone());
+            if(this.trail.length>80)this.trail.shift();
+            this.trailTick=0;
+        }
+    }
+    updateVel(newAcc,dt){
+        if(this.isStar)return;
+        let avgAcc =new Vec2(
+            (this.acc.x+newAcc.x)*0.5,(this.acc.y+newAcc.y)*0.5,(this.acc.y +newAcc.y)*0.5
+        );
+        this.vel.add(avgAcc.mult(dt));
+        this.acc = newAcc;
+    }
+}
+class Engine{
+    constructor(){
+        this.bodies =[];
+        this.G =0.8;
+        this.softeningSq=15;
+    }
+    step(dt){
+        for(let b of this.bodies.bodies){
+            b.updatePos(dt);
+        }
+        let qtree= new QuadTree(new Rect(0,0,10000,10000),4);
+        for(let b of this.bodies){
+            if(!b.dead) qtree.insert(b);
+        }
+        let nextAccels =new Map();
+        for(let i=0;i<this.bodies.length;i++){
+            let b1=this.bodies[i];
+            if(b1.dead)continue;
+            let force=new Vec2(0,0);
+            for(let j=0;j<this.bodies.length;j++){
+                if(i===j)continue;
+                let b2 = this.bodies[j];
+                if(b2.dead)continue;
+                let dir = Vec2.sub(b2.pos,b1.pos);
+                let distSq = dir.magSq();
+                let fMag =(this.G*b1.mass*b2.mass)/(distSq+this.softeningSq);
+                dir.mult(1/Math.sqrt(distSq));
+                force.add(dir.mult(fMag));
+            }
+            nextAccels.set(b1.id,new Vec2(force.x/b1.mass,force.y/b1.mass));
+            let range =new Rect(b1.pos.x,b1.pos.y,b1.radius*2,b1.radius*2);
+            let nearby=qtree.query(range);
+            for(let b2 of nearby){
+                if(b1===b2||b1.dead||b2.dead)continue;
+                let dist=Vec2.sub(b2.pos,b1.pos).mag();
+                if(dist<b1.radius+b2.radius){
+                    this._resolveCollision(b1,b2,nextAccels);   
+                }
+            }
+        }
+        for(let b of this.bodies){
+            if(!b.dead&&nextAccels.has(b.id)){
+                b.updateVel(nextAccels.get(b.id),dt);
+            }
+        }
+        this.bodies=this.bodies.filter(b=>!b.dead);
+    }
+    _resolveCollision(b1,b2,nextAccels){
+        let survivor,victim;
+        if(b1.mass>-b2.mass){
+            survivor=b1;
+            victim=b2;
+        }else{
+            survivor=b2;
+            victim=b1;
+        }
+        let totalMass=survivor.mass+victim.mass;
+        let p1=Vec2.mult(survivor.vel,survivor.mass);
+    }
+}
