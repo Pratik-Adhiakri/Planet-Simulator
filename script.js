@@ -190,5 +190,33 @@ class Engine{
         }
         let totalMass=survivor.mass+victim.mass;
         let p1=Vec2.mult(survivor.vel,survivor.mass);
+        let p2 =Vec2.mult(victim.vel,victim.mass);
+        survivor.vel =p1.add(p2).mult(1/totalMass);
+        survivor.mass =totalMass;
+        survivor.radius =Math.max(3,Math.sqrt(survivor.mass)*1.2);
+        victim.dead=true;
+        if(accMsp.has(survivor.id)&&accMap.has(victim.id)){
+            let combinedAcc = accMap.get(survivor.id).add(accMap.get(victim.id));
+            accMap.set(survivor.id,combinedAcc);
+        }
+    }
+}
+class Renderer{
+    constructor(canvasId){
+        this.canvas =document.getElementById(canvasId);
+        this.ctx =this.canvas.getContext('2d');
+        this.camX=0;
+        this.camY=0;
+        this.zoom=1;
+        this.bgCanvas = document.createElement('canvas');
+        this.bgCtx= this.bgCanvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize',()=>this.resize());
+    }
+    resize(){
+        this.canvas.width =window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        window.bgCanvas.width = window.innerWidth;
+        window
     }
 }
