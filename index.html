@@ -3,11 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>2D Planet Simulator Engine</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+    <!--lesss go-->
+    <canvas id="engine-canvas"></canvas>
+    <div id="hud">
+        <div class="hud-row"><span>Entity Count: <span id="hud-entities">0</span></span></div>
+        <div class="hud-row"><span>Camera Zoom: <span id="hud-zoom">1.0x</span></span></div>
+        <div class="hud-row"><span>Total System Mass: <span id="hud-mass">0</span></span></div>
+        <div class="hud-row">
+            R Click + Drag: Rotate Camera <br>
+            Scroll: Zoom <br>
+            L Click + Drag: Spawn Heavenly Body (Pull to manage Velocity)
+        </div>
+    </div>
+    <div id="controls">
+        <div class="slider-group">
+            <label>Spawn Mass: ( <span id="spawn-mass-val">150</span> kg)</label>
+            <input type="range" id="spawn-mass" min="10" max="5000" value="150">
+        </div>
+        <div class="slider-group">
+            <label>Time Multi (<span id="time-val">1.0</span> x)</label>
+            <input type="range" id="time-step" min="0" max="5" step="0.1" value="1">
+        </div>
+        <div class="btn-group">
+            <button id="btn-pause">Pause</button>
+            <button id="btn-clear">Nuke All</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
