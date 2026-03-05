@@ -1,0 +1,93 @@
+/*less do the styling*/
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body,html{
+    width: 100%;
+    height: 100%;
+    background: #050505;
+    color: #eee;
+    font-family: 'Consolas', monospace;
+    overflow: hidden;
+}
+#engine-canvas{
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+}
+#hud{
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 350px;
+    background: rgba(10, 10, 15, 0.85);
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    font-size: 13px;
+    pointer-events: none;
+    user-select: none;
+    backdrop-filter: blur(5px);
+}
+.hud-row{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #222;
+    padding-bottom: 4px;
+}
+.hud-row:last-child{
+    border-bottom: none;
+    margin-bottom: 0;
+}
+#controls{
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 350px;
+    background: rgba(10, 10, 15, 0.85);
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    pointer-events: auto;
+}
+.slider-group{
+    margin-bottom: 12px
+}
+.slider-group label{
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: #aaa;
+}
+input[type="range"]{
+    width: 100%;
+    cursor: pointer;
+}
+.btn-group{
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+button{
+    flex: 1;
+    padding: 8px;
+    background: #1a1a24;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    transform: 0.1s;
+}
+button:hover{
+    background: #2a2a3f;
+    border-color: #666;
+}
+button.active{
+    background: #2b5c3f;
+    border-color: #4caf50;
+}
+/*done yay*/
