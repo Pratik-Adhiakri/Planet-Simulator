@@ -217,6 +217,76 @@ class Renderer{
         this.canvas.width =window.innerWidth;
         this.canvas.height = window.innerHeight;
         window.bgCanvas.width = window.innerWidth;
-        window
+        window.bgCanvas.height =window.innerHeight;
+        this._generateStarfield();
+    }
+    _generateStarfield(){
+        this.bgCtx.fillStyle = '#050505';
+        this.bgCtx.fillRect(0,0,this.bgCanvas.width,this.bgCanvas.height);
+        for(let i=0;i<400;i++){}
+        this.bgCtx.beginPath();
+        for(let i=0;i<400;i++){
+            let x=Math.random()*this.bgCanvas.width;
+            let y= Math.random()*this.bgCanvas.height;
+            let r=Math.random()*1.2;
+            this.bgCtx.arc(x,y,r,0,Math.PI*2);
+            this.bgCtx.fillStyle= `rgba(255,255,255,${Math.random()*0.8})`;
+            this.bgCtx.fill();
+        }
+    }
+    worldToScreen(pos){
+        return{
+            x:(pos.x-this.camX)*this.zoom+this.canvas.width/2,
+            y:(pos.y-this.camY)*this.zoom+this.canvas.height/2
+        };
+    }
+    screenToWorld(sx,sy){
+        return{
+            x:(sx-this.canvas.width/2)/this.zoom+this.camX,
+            y:{sy-this.canvas.height/2}/this.zoom+this.camY
+        };
+    }
+    render(engine,input){
+       this.ctx.drawImage(this.bgCanvas,0,0);
+       this.ctx.lineCap = 'round';
+         for(let b of engine.bodies){
+            if(b.trail.length<2)continue;
+            this.ctx.beginPath();
+            let start= this.worldToScreen(b.trail[0]);
+            this.ctx.moveTo(start.x,start.y);
+            for(let i=1;i<b.trail.length;i++){
+                let p=this.worldToScreen(b.trail[i]);
+                this.ctx.lineTo(p.x,p.y);
+            }
+            this.ctx.strokeStyle =`hsla(${b.hue},80%,60%,0.3)`;
+            this.ctx.lineWidth =1.5*this.zoom;
+            this.ctx.stroke();
+         }
+         for(let b of engine.bodies){
+            let sp=this.worldToScreen(b.pos);
+            let r =b.radius*this.zoom;
+            if(sp.x+r<0||sp.x-r>this.canvas.width||sp.y+r<0||sp.y-r>this.canvas.height)continue;
+            let grad =this.ctx.createRadialGradient(
+                sp.x-r*0.3,sp.y-r*0.3,r*0.1,
+                sp.x,sp.y,r
+            );
+            if(b.isStar){
+                grad.addColorStop(0,'#fff');
+                grad.addColorStop(0.2,'#ffdd44');
+                grad.addColorStop(1,'#ff6600');
+                this.ctx.shadowBlur = r*2;
+                this.ctx.shadowColor ='#ff8800';
+            }else{
+                grad.addColorStop(0, `hsl(${b.hue},80%,70%)`);
+                grad.addColorStop(1,`hsl(${b.hue},80%,20%`);
+                this.ctx.shadowBlur = r*0.5;
+                this.ctx.shadowColor = `hsl(${b.hue},80%,20%)`;
+            }
+            this.ctx.beginPath();
+            this.ctx.moveTo(start.x,start.y);
+            this.ctx.lineTo(end.x, end.y);
+            this.
+         }
+
     }
 }
