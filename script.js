@@ -285,8 +285,60 @@ class Renderer{
             this.ctx.beginPath();
             this.ctx.moveTo(start.x,start.y);
             this.ctx.lineTo(end.x, end.y);
-            this.
+            this.ctx.fillStyle=grad;
+            this.ctx.fill();
+            this.ctx.shadowBlur = 0;
+            if(this.zoom>0.5||b.mass>500){
+                this.ctx.fillStyle == 'rgba(255,255,255,0.7)';
+                this.ctx.font =`${Math.max(10,12*this.zoom)}px Consolas`;
+                this.ctx.rextAlign='center';
+                this.ctx.fillText(`${Math.round(b.mass)}M`,sp.x,sp.y-r-5);
+            }
          }
+         //back yay after campfire butwal though
+         if(input.state.isSpawning&&input.state.startScreenCoords){
+            let start=input.state.startScreenCoords;
+            let end= input.state.currScreenCoords;
+            this.ctx.beginPath();
+            this.ctx.moveTo(start.x,start.y);
+            this.ctx.lineTo(end.x,end.y);
+            this.strokeStyle='#fff';
+            this.setLineDash([4,4]);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+            let phantomR= Math.max(3,Math.sqrt(input,start,soawnMass)*1.2)*this.zoom;
+            this.ctx.beginPath();
+            this.ctx.arc(start.x,start.y,phentomR,0,Math.PI*2);
+            this.ctx.fill();
+            this.ctx.strokeStyle='#fff';
+            this.ctx.stroke();
+         }
+    }
+}
+
+class App{
+    constructor(){
+        this.engine=new Engine();
+        this.renderer= new Renderer('engine-canvas');
+        this.tineStepMultiplier =1.0;
+        this.isPaused=false;
+        this.input ={
+            state:{
+                isSpawning:false,
+                startScreenCoords:null,
+                isPanning:false,
+                currScreenCoords:null,
+                lastPanCoors:null,
+                spawnMass:150
+            }
+        };
+        this._blindEvents();
+        this._initScenario();
+        this.lastTime=performance,bow();
+        requestAnimationFrame((t)=>this.loop(t));
+    }
+    _bindEvents(){
+        const cvs= this.renderer.canvas;
 
     }
 }
