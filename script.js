@@ -339,6 +339,55 @@ class App{
     }
     _bindEvents(){
         const cvs= this.renderer.canvas;
-
+        cvs.addEventListener('mousedown',(e)=>{
+            if(e.button===0){
+                this.input.state.isSpawning = true;
+                this.input.state.startScreenCoords={
+                    x:e.clientX,
+                    y:e.clientY
+                };
+                this.input.state.currScreenCoords={
+                    x:e.clientX,
+                    y:clientY
+                };
+            }else if(e.button===2){
+                this.input.state.isPanning=true;
+                this.input.state.lastPanCoors={
+                    x:e.clientX,
+                    y:e.clientY
+                };
+            }
+        });
+        //not much left yay
+        window.addEventListener('mouseup',(e)=>{
+            if(e.button===0&&this.input.state.isSpawning){
+                let startW=this.renderer.screenToWorld(this.input.state.startScreenCoords.x,this.input.state.startScreenCoords.y);
+                let endW=this.renderer.screenToWorld(this.input.state.startScreenCoords.x,this.input.state.currScreenCoords.y);
+                let vel = Vec2(startW.x-endW.x,startW.y-endW.y).mult(0.015);
+                let body =new Body(startW.x-endW.x,startW.y-endW.y).mult(0.015);
+                body.vel=vel;
+                this.engine.bodies.push(body);
+                this.input.state.isSpawning= false;
+            }
+            if(e.button==2)this.input.state.isPanning=false;
+            cvs.addEventListener('contextmenu',(e)=>{
+                e.preventDefault();
+        });
+            cvs.addEventListener('wheel',(e)=>{
+               let mouseW_before =this.renderer.screenToWorld(e.clientX,e.clientY);
+               const zoomAmount=0.1;
+               if(e.deltaY<0)this.renderer.zoom*=(1+zoomAmount);
+               else this.renderer.zoom*=(1-zoomAmount);
+               this.renderer.zoom=Math.max(0.05,Math.min(this.renderer.zoom,5.0));
+               let mouseW_after=this.renderer.screenToWorld(e.clientX,e.clientY);
+               this.renderer.camX+=(mouseW_before.x-mouseW_after.x);
+               this.renderer.camY+=(mouseW_before.y-mouseW_after.y);
+               document.getElementById('hud-zoom').innerText=this.renderer.zoom.toFixed(2)+'x';
+            });
+            document.getElementById('spawn-mass').addEventListener('input',e=>{
+                this.input.state.spawnMass=parseFloat(e.target.value);
+                document.getElementById('time-step')
+            })
+        })
     }
 }
