@@ -5,8 +5,8 @@ class Vec2{
         this.y= y;
     }
     add(v){
-        this.x =v.x;
-        this.y= v.y;
+        this.x +=v.x;
+        this.y+= v.y;
         return this;
     }
     sub(v){
@@ -58,7 +58,7 @@ class QuadTree{
     }
     subdivide(){
         let x = this.boundary.x, y= this.boundary.y, w=this.boundary.w/2,h=this.boundary.h/2;
-        this.ne= nwq QuadTree(new Rect(x+w,y-h,w,h),this.capacity);
+        this.ne= new QuadTree(new Rect(x+w,y-h,w,h),this.capacity);
         this.nw = new QuadTree(new Rect(x-w,y-h,w,h),this.capacity);
         this.se =new QuadTree(new Rect(x+w,y+h,w,h),this.capacity);
         this.sw =new QuadTree(new Rect(x-w,y+h,w,h),this.capacity);
@@ -126,7 +126,7 @@ class Body{
     updateVel(newAcc,dt){
         if(this.isStar)return;
         let avgAcc =new Vec2(
-            (this.acc.x+newAcc.x)*0.5,(this.acc.y+newAcc.y)*0.5,(this.acc.y +newAcc.y)*0.5
+            (this.acc.x+newAcc.x)*0.5,(this.acc.y+newAcc.y)*0.5
         );
         this.vel.add(avgAcc.mult(dt));
         this.acc = newAcc;
@@ -139,7 +139,7 @@ class Engine{
         this.softeningSq=15;
     }
     step(dt){
-        for(let b of this.bodies.bodies){
+        for(let b of this.bodies){
             b.updatePos(dt);
         }
         let qtree= new QuadTree(new Rect(0,0,10000,10000),4);
@@ -181,7 +181,7 @@ class Engine{
     }
     _resolveCollision(b1,b2,nextAccels){
         let survivor,victim;
-        if(b1.mass>-b2.mass){
+        if(b1.mass>=b2.mass){
             survivor=b1;
             victim=b2;
         }else{
@@ -195,9 +195,9 @@ class Engine{
         survivor.mass =totalMass;
         survivor.radius =Math.max(3,Math.sqrt(survivor.mass)*1.2);
         victim.dead=true;
-        if(accMsp.has(survivor.id)&&accMap.has(victim.id)){
-            let combinedAcc = accMap.get(survivor.id).add(accMap.get(victim.id));
-            accMap.set(survivor.id,combinedAcc);
+        if(nextAccels.has(survivor.id)&&nextAccels.has(victim.id)){
+            let combinedAcc = nextAccels.get(survivor.id).add(nextAccels.get(victim.id));
+            nextAccels.set(survivor.id,combinedAcc);
         }
     }
 }
@@ -216,16 +216,15 @@ class Renderer{
     resize(){
         this.canvas.width =window.innerWidth;
         this.canvas.height = window.innerHeight;
-        window.bgCanvas.width = window.innerWidth;
-        window.bgCanvas.height =window.innerHeight;
+        this.bgCanvas.width = window.innerWidth;
+        this.bgCanvas.height =window.innerHeight;
         this._generateStarfield();
     }
     _generateStarfield(){
         this.bgCtx.fillStyle = '#050505';
         this.bgCtx.fillRect(0,0,this.bgCanvas.width,this.bgCanvas.height);
-        for(let i=0;i<400;i++){}
-        this.bgCtx.beginPath();
         for(let i=0;i<400;i++){
+            this.bgCtx.beginPath();
             let x=Math.random()*this.bgCanvas.width;
             let y= Math.random()*this.bgCanvas.height;
             let r=Math.random()*1.2;
@@ -243,7 +242,7 @@ class Renderer{
     screenToWorld(sx,sy){
         return{
             x:(sx-this.canvas.width/2)/this.zoom+this.camX,
-            y:{sy-this.canvas.height/2}/this.zoom+this.camY
+            y:(sy-this.canvas.height/2)/this.zoom+this.camY
         };
     }
     render(engine,input){
@@ -278,20 +277,19 @@ class Renderer{
                 this.ctx.shadowColor ='#ff8800';
             }else{
                 grad.addColorStop(0, `hsl(${b.hue},80%,70%)`);
-                grad.addColorStop(1,`hsl(${b.hue},80%,20%`);
+                grad.addColorStop(1,`hsl(${b.hue},80%,20%)`);
                 this.ctx.shadowBlur = r*0.5;
                 this.ctx.shadowColor = `hsl(${b.hue},80%,20%)`;
             }
             this.ctx.beginPath();
-            this.ctx.moveTo(start.x,start.y);
-            this.ctx.lineTo(end.x, end.y);
+            this.ctx.arc(sp.x,sp.y,r,0,Math.PI*2);
             this.ctx.fillStyle=grad;
             this.ctx.fill();
             this.ctx.shadowBlur = 0;
             if(this.zoom>0.5||b.mass>500){
-                this.ctx.fillStyle == 'rgba(255,255,255,0.7)';
+                this.ctx.fillStyle = 'rgba(255,255,255,0.7)';
                 this.ctx.font =`${Math.max(10,12*this.zoom)}px Consolas`;
-                this.ctx.rextAlign='center';
+                this.ctx.textAlign='center';
                 this.ctx.fillText(`${Math.round(b.mass)}M`,sp.x,sp.y-r-5);
             }
          }
@@ -302,13 +300,13 @@ class Renderer{
             this.ctx.beginPath();
             this.ctx.moveTo(start.x,start.y);
             this.ctx.lineTo(end.x,end.y);
-            this.strokeStyle='#fff';
-            this.setLineDash([4,4]);
+            this.ctx.strokeStyle='#fff';
+            this.ctx.setLineDash([4,4]);
             this.ctx.stroke();
             this.ctx.setLineDash([]);
-            let phantomR= Math.max(3,Math.sqrt(input,start,soawnMass)*1.2)*this.zoom;
+            let phantomR= Math.max(3,Math.sqrt(input.state.spawnMass)*1.2)*this.zoom;
             this.ctx.beginPath();
-            this.ctx.arc(start.x,start.y,phentomR,0,Math.PI*2);
+            this.ctx.arc(start.x,start.y,phantomR,0,Math.PI*2);
             this.ctx.fill();
             this.ctx.strokeStyle='#fff';
             this.ctx.stroke();
@@ -320,7 +318,7 @@ class App{
     constructor(){
         this.engine=new Engine();
         this.renderer= new Renderer('engine-canvas');
-        this.tineStepMultiplier =1.0;
+        this.timeStepMultiplier =1.0;
         this.isPaused=false;
         this.input ={
             state:{
@@ -332,9 +330,9 @@ class App{
                 spawnMass:150
             }
         };
-        this._blindEvents();
+        this._bindEvents();
         this._initScenario();
-        this.lastTime=performance,bow();
+        this.lastTime=performance.now();
         requestAnimationFrame((t)=>this.loop(t));
     }
     _bindEvents(){
@@ -348,7 +346,7 @@ class App{
                 };
                 this.input.state.currScreenCoords={
                     x:e.clientX,
-                    y:clientY
+                    y:e.clientY
                 };
             }else if(e.button===2){
                 this.input.state.isPanning=true;
@@ -359,35 +357,89 @@ class App{
             }
         });
         //not much left yay
+        window.addEventListener('mousemove',(e)=>{
+            if(this.input.state.isSpawning){
+                this.input.state.currScreenCoords={x:e.clientX,y:e.clientY};
+            }
+            if(this.input.state.isPanning&&this.input.state.lastPanCoors){
+                let dx=e.clientX-this.input.state.lastPanCoors.x;
+                let dy=e.clientY-this.input.state.lastPanCoors.y;
+                this.renderer.camX-=dx/this.renderer.zoom;
+                this.renderer.camY-=dy/this.renderer.zoom;
+                this.input.state.lastPanCoors={x:e.clientX,y:e.clientY};
+            }
+        });
         window.addEventListener('mouseup',(e)=>{
             if(e.button===0&&this.input.state.isSpawning){
                 let startW=this.renderer.screenToWorld(this.input.state.startScreenCoords.x,this.input.state.startScreenCoords.y);
-                let endW=this.renderer.screenToWorld(this.input.state.startScreenCoords.x,this.input.state.currScreenCoords.y);
-                let vel = Vec2(startW.x-endW.x,startW.y-endW.y).mult(0.015);
-                let body =new Body(startW.x-endW.x,startW.y-endW.y).mult(0.015);
+                let endW=this.renderer.screenToWorld(this.input.state.currScreenCoords.x,this.input.state.currScreenCoords.y);
+                let vel = new Vec2(startW.x-endW.x,startW.y-endW.y).mult(0.015);
+                let body =new Body(startW.x,startW.y,this.input.state.spawnMass);
                 body.vel=vel;
                 this.engine.bodies.push(body);
                 this.input.state.isSpawning= false;
             }
-            if(e.button==2)this.input.state.isPanning=false;
-            cvs.addEventListener('contextmenu',(e)=>{
-                e.preventDefault();
+            if(e.button===2)this.input.state.isPanning=false;
         });
-            cvs.addEventListener('wheel',(e)=>{
-               let mouseW_before =this.renderer.screenToWorld(e.clientX,e.clientY);
-               const zoomAmount=0.1;
-               if(e.deltaY<0)this.renderer.zoom*=(1+zoomAmount);
-               else this.renderer.zoom*=(1-zoomAmount);
-               this.renderer.zoom=Math.max(0.05,Math.min(this.renderer.zoom,5.0));
-               let mouseW_after=this.renderer.screenToWorld(e.clientX,e.clientY);
-               this.renderer.camX+=(mouseW_before.x-mouseW_after.x);
-               this.renderer.camY+=(mouseW_before.y-mouseW_after.y);
-               document.getElementById('hud-zoom').innerText=this.renderer.zoom.toFixed(2)+'x';
-            });
-            document.getElementById('spawn-mass').addEventListener('input',e=>{
-                this.input.state.spawnMass=parseFloat(e.target.value);
-                document.getElementById('time-step')
-            })
-        })
+        cvs.addEventListener('contextmenu',(e)=>{
+            e.preventDefault();
+        });
+        cvs.addEventListener('wheel',(e)=>{
+           let mouseW_before =this.renderer.screenToWorld(e.clientX,e.clientY);
+           const zoomAmount=0.1;
+           if(e.deltaY<0)this.renderer.zoom*=(1+zoomAmount);
+           else this.renderer.zoom*=(1-zoomAmount);
+           this.renderer.zoom=Math.max(0.05,Math.min(this.renderer.zoom,5.0));
+           let mouseW_after=this.renderer.screenToWorld(e.clientX,e.clientY);
+           this.renderer.camX+=(mouseW_before.x-mouseW_after.x);
+           this.renderer.camY+=(mouseW_before.y-mouseW_after.y);
+           document.getElementById('hud-zoom').innerText=this.renderer.zoom.toFixed(2)+'x';
+        });
+        document.getElementById('spawn-mass').addEventListener('input',e=>{
+            this.input.state.spawnMass=parseInt(e.target.value);
+            document.getElementById('spawn-mass-val').innerText=e.target.value;
+        });
+        document.getElementById('time-step').addEventListener('input',e=>{
+            this.timeStepMultiplier=parseFloat(e.target.value);
+            document.getElementById('time-val').innerText=parseFloat(e.target.value).toFixed(1);
+        });
+        document.getElementById('btn-pause').addEventListener('click',(e)=>{
+            this.isPaused= !this.isPaused;
+            e.target.innerText=this.isPaused?"Resume":"Pause";
+            e.target.classList.toggle('active');
+        });
+        document.getElementById('btn-clear').addEventListener('click',()=>{
+            this.engine.bodies = [];
+        });
+    }
+    //im so tired man
+    _initScenario(){
+        let s1=new Body(-200,0,4000,true);
+        s1.vel = new Vec2(0,1.5);
+        let s2=new Body(200,0,3000,true);
+        s2.vel=new Vec2(0,-2.0);
+        this.engine.bodies.push(s1,s2);
+        for(let i=0;i<8;i++){
+            let r=400+Math.random()*800;
+            let theta=Math.random()*Math.PI*2;
+            let b=new Body(Math.cos(theta)*r,Math.sin(theta)*r,50+Math.random()*200);
+            let speed=3+Math.random()*2;
+            b.vel=new Vec2(-Math.sin(theta)*speed,Math.cos(theta)*speed);
+            this.engine.bodies.push(b);
+        }
+    }
+    loop(currentTime){
+        const dt=1.0*this.timeStepMultiplier;
+        if(!this.isPaused&&dt>0)this.engine.step(dt);
+        this.renderer.render(this.engine,this.input);
+        this._updateHUD();
+        requestAnimationFrame((t)=>this.loop(t));
+    }
+    _updateHUD(){
+        document.getElementById('hud-entities').innerText=this.engine.bodies.length;
+        let totalMass=this.engine.bodies.reduce((sum,b)=>sum+b.mass,0);
+        document.getElementById('hud-mass').innerText=totalMass.toLocaleString()+'M';
     }
 }
+window.onload=()=>new App();
+//finally done im so dead inside
