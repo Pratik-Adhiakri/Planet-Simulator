@@ -1,6 +1,6 @@
 <h1>Planet Simulator</h1>
 <p>Planet Simulator is a simulator that simulates different heavenly bodies's gravitational force and orbits with real time physics. It is made by using HTML/CSS/JS. </p>
-
+<img src="planetsimulator.png" width="100%">
 <h3>Technologies Used</h3>
 <p>1/ HTML-HTML is used for the basic structure and to add the canvas for the game to work.</p>
 <p>2. CSS-CSS is used to style the different elements and make the UI attractive as well as interactive.</p>
